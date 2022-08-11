@@ -1,11 +1,11 @@
 
 #include "SPI.h"
-#include "TFT_eSPI.h"
-#include "Free_Fonts.h" // Include the header file attached to this sketch
-#include "icons.h"
+#include "TFT_eSPI.h"   //TFT_eSPI
+#include "Free_Fonts.h" // Free Fonts
+#include "icons.h"      //Own Icons
 #include <WiFi.h>
-#include <Preferences.h>
-#include <Firebase_ESP_Client.h>
+#include <Preferences.h>          //Use to read/write data in the memory
+#include <Firebase_ESP_Client.h>  //Firebase Library
 
 //Provide the token generation process info.
 #include "addons/TokenHelper.h"
@@ -24,12 +24,12 @@
 #define TFT_GREY 0x5AEB
 
 //========================== USER INTERFACE VARIABLES =====================
-String text;
+String text;              
 uint8_t optionToSave = 0;
 bool typeKeyboard = true;
 bool transKeyboard = false;
 int start_ypoint  = 120;
-String mainWifiSSID, mainWifiPSW, mainNameDevice, mainFirebaseKey, mainFirebaseURL;
+String mainWifiSSID, mainWifiPSW, mainNameDevice, mainFirebaseKey, mainFirebaseURL;     
 bool changeSSID, changeSSIDPSW;
 bool keyboard_stat = false; //Triger to print the keyboard
 
@@ -38,24 +38,23 @@ int countPRESSED = 0;
 TFT_eSPI tft = TFT_eSPI();
 Preferences preferences;
 
-//Firebase configuration
-    //Define Firebase Data object
-    FirebaseData fbdo;
+//Firebase
+FirebaseData fbdo;
 
-    FirebaseAuth auth;
-    FirebaseConfig config;
+FirebaseAuth auth;
+FirebaseConfig config;
 
-    unsigned long sendDataPrevMillis = 0;
-    int count = 0;
-    bool signupOK = false;
+unsigned long sendDataPrevMillis = 0;
+int count = 0;
+bool signupOK = false;
 
 void printwrap(String msg, int x, int y)
 {
 
     tft.setTextColor(TFT_GREEN, TFT_BLACK);
     tft.setFreeFont(FF1);
-   uint16_t auxCount = 0;
-   Serial.print("Length = "+msg.length());
+    uint16_t auxCount = 0;
+    Serial.print("Length = "+msg.length());
     int maxchars = 20;
     if (msg.length() > maxchars or msg.length()-1 < maxchars or msg.length() < maxchars)
     {
@@ -138,7 +137,6 @@ void printKeys(const char *msg, int x, int y){ //Problem detected!!!!!!
        String keyPrint = String(msg[i]);
        tft.drawString(keyPrint, ((i-30)*x)-17,  77+y);
     }
-
     detectPress(msg);
   }
 
@@ -148,10 +146,6 @@ void draw_keyboard(uint16_t y, bool flag){
             //Text Area
             tft.fillRect(0, 0, 240, 80, TFT_GREY);
             tft.fillRect(5, 5, 230, 70, TFT_BLACK);
-
-
-
-         //   tft.setTextColor(TFT_BLACK, KEYBOARD_BG);
             tft.fillRoundRect(190, y-35,  50, 30, 4, TFT_RED); //DEL
             tft.fillRoundRect(0,   100+y,  65, 30, 4, ACTIONB_BG); //SHIFT
             tft.fillRoundRect(180,  100+y,  60, 30, 4, ACTIONB_BG); //Special characters
@@ -175,10 +169,8 @@ void draw_keyboard(uint16_t y, bool flag){
     }
 }
 void setup(){
-   delay(500);
-
+    delay(500);
     Serial.begin(115200);
-
     tft.begin();
     tft.setRotation(0);
     uint16_t calData[5] = { 297, 3583, 426, 3470, 6 };
@@ -186,7 +178,6 @@ void setup(){
     digitalWrite(BUZZER_PIN, LOW);
     tft.setTouch(calData);
     tft.fillScreen(TFT_BLACK);
-
     getData();
     draw_menu();
   }
@@ -199,9 +190,7 @@ void draw_menu(){
         
     }
     else{
-
     tft.fillScreen(TFT_BLACK);
-
     draw_icon(icon_BWifi, 65, 70, 2, 35);
     draw_icon(icon_BFirebase, 65, 49, 14, 160);
     //=================== BUTTONS ======================================
@@ -209,13 +198,11 @@ void draw_menu(){
      tft.fillRoundRect(85, 50, 140, 40, 4, BTN_COLORM); //PASSWORD
      tft.fillRoundRect(85, 95, 140, 40, 4, BTN_COLORM); //NAME DEVICE
      tft.fillRoundRect(85, 150, 140, 40, 4, BTN_COLORM);  //URL FB
-     tft.fillRoundRect(85, 195, 140, 40, 4, BTN_COLORM);  //KEY KB
-
+     tft.fillRoundRect(85, 195, 140, 40, 4, BTN_COLORM);  //KEY FB
+     tft.fillRoundRect(20, 240, 90, 30, 4, TFT_GREEN); //Save BTN
+     tft.fillRoundRect(130, 240, 90, 30, 4, TFT_BLUE); //Back BTN
      
-     tft.fillRoundRect(20, 240, 90, 30, 4, TFT_GREEN);
-     tft.fillRoundRect(130, 240, 90, 30, 4, TFT_BLUE);
-     
-      tft.setTextColor(TEXT_COLORM, BTN_COLORM);
+     tft.setTextColor(TEXT_COLORM, BTN_COLORM);
      tft.setFreeFont(FF1);
      tft.drawString("Set SSID", 105, 18);
      tft.drawString("Set", 139, 55);
@@ -234,15 +221,10 @@ void draw_menu(){
      tft.setFreeFont(FF1);
      tft.drawString("WiFi:", 3, 285);
      tft.drawString("Firebase:", 3, 300);
-
-
-      system_diagnostic();
-
+     system_diagnostic(); //Check the status of the connections (Wifi and firebase)
       while (true)
       {
-        //  Serial.println("Waiting to press...");
           uint16_t x = 0, y = 0; // To store the touch coordinates
-
           // Pressed will be set true is there is a valid touch on the screen
           bool pressed = tft.getTouch(&x, &y);
           if (pressed) { 
@@ -296,10 +278,8 @@ void draw_menu(){
                     break;
                   }
               if(20 < x  && x < 110 && 240< y && y < 270 ){
-//                      saveData();
                       connectWifi();
                       loginFirebase(mainFirebaseURL, mainFirebaseKey);
-                     // loginFirebase("https://small-talk-fmek.firebaseio.com/", "AIzaSyBqCO97KXcNagdqSoKuaEijeXQbCv-kU54");
                   }
               if(130< x  && x < 220 &&  240< y && y < 270 ){
                     // keyboard_stat = false;
@@ -308,7 +288,6 @@ void draw_menu(){
                     // template_load();
                     // plot_data_status = true;
                     // come_to_home = true;
-                    
                     // break;
                   }
                 delay(500);
@@ -331,11 +310,8 @@ void draw_icon(const uint16_t* icon, uint16_t w, uint16_t h, uint16_t x, uint16_
   }
 }
 void system_diagnostic(){
-
-
      tft.fillRect(60, 285, 250, 15, TFT_BLACK);
      tft.fillRect(97, 285, 265, 15, TFT_BLACK);
-
       if (WiFi.status() == WL_CONNECTED )
       {
           String ip_host = String(WiFi.localIP()[0])+"."+String(WiFi.localIP()[1])+"."+String(WiFi.localIP()[2])+"."+String(WiFi.localIP()[3]);
@@ -349,18 +325,15 @@ void system_diagnostic(){
           tft.drawString("Not connected", 60, 285);
       }
 
- //     if(signupOK == true){
-  /*    tft.setTextColor(TFT_GREEN, TFT_BLACK); 
+     if(signupOK == true){
+        tft.setTextColor(TFT_GREEN, TFT_BLACK); 
         tft.setFreeFont(FF1);
         tft.drawString("Login OK", 100, 300);*/
- //     }
-   //   else{
+    }else{
         tft.setTextColor(TFT_RED, TFT_BLACK); 
         tft.setFreeFont(FF1);
         tft.drawString("Login Fail", 100, 300);
-   //   }
-
-
+      }
 }
 
 void onBuzzer(){
@@ -439,7 +412,6 @@ void prepareDataToSave(String textToSave){
            saveData("api_key", mainFirebaseKey);
         }
         break;
-
     default:
         break;
     }
@@ -538,13 +510,7 @@ void loginFirebase(String apiURL, String apiKey){
       Firebase.reconnectWiFi(true);
       /* Sign up */
       if (Firebase.signUp(&config, &auth, "", "")){
-    //  if (Firebase.ready()){
         Serial.println("ok");
-        /* Assign the callback function for the long running token generation task */
-        // config.token_status_callback = tokenStatusCallback; //see addons/TokenHelper.h
-        
-        // Firebase.begin(&config, &auth);
-        // Firebase.reconnectWiFi(true);
         signupOK = true;
         tft.fillRect(97, 300, 265, 15, TFT_BLACK);
         tft.setTextColor(TFT_GREEN, TFT_BLACK); 
@@ -570,7 +536,6 @@ void detectPress(const char *abc){
       if (keyboard_stat == false){ break;}  
        else{
             uint16_t x = 0, y = 0; // To store the touch coordinates
-
             // Pressed will be set true is there is a valid touch on the screen
             bool pressed = tft.getTouch(&x, &y);
             if (pressed && 0+start_ypoint<y && y<96+start_ypoint) { 
@@ -579,9 +544,7 @@ void detectPress(const char *abc){
                 {
                     for (uint8_t ix = 0; ix <10; ix++)
                     {
-                        
                         tft.fillCircle(x, y, 2, TFT_WHITE);
-                    //     Serial.println("Range x1: "+String(23*ix)+" x2:"+String(23 +(23*ix))+" y1:" + String(iy*24)+" y2:"+String(24+(24*iy))); 
                         if(24*ix< x && x < 24 +(24*ix)  &&  (iy*24)+start_ypoint  < y && y < 24+(24*iy)+start_ypoint){
                             Serial.println("PRESSED: "+String(abc[char_pass+1]));
                             effect_press(String(abc[char_pass+1]), (24*ix)+7,  (24*iy)+5+start_ypoint, KEYBOARD_BG);
@@ -590,14 +553,11 @@ void detectPress(const char *abc){
                             onBuzzer();
                         }
                     char_pass++;
-              
                     }
-        
                  }
             }
             if (pressed)
             {
-                                 //=============================Function Buttons
             if(100 < x && x < 190 && 100+start_ypoint < y && y < start_ypoint+130){ //Space key
                     text += " ";
                     effect_press("_____", 95, 110+start_ypoint, SPACE_BG);
@@ -667,8 +627,6 @@ void detectPress(const char *abc){
                 break;
                 }
             }
-            
-
         }
     }
     
@@ -690,7 +648,6 @@ void detectPress(const char *abc){
         tft.drawString("ABC", 15, 108+start_ypoint);
         Serial.println("Count "+String(countPRESSED));
         printKeys(" 1234567890QWERTYUIOPASDFGHJKL@ZXCVBNM,.-", 24, start_ypoint);
-
     }
 
 
